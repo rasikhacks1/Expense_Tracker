@@ -92,22 +92,7 @@ npm run dev
 
 ✅ Frontend running at: http://localhost:5173
 
----
 
-## 🐳 Docker Setup (All 3 Tiers)
-
-```bash
-# From the project root
-docker-compose up --build
-```
-
-| Service | URL |
-|---------|-----|
-| Frontend (Nginx) | http://localhost:80 |
-| Backend (FastAPI) | http://localhost:8000 |
-| MongoDB | mongodb://localhost:27017 |
-
----
 
 ## 📁 Project Structure
 
