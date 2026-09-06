@@ -188,7 +188,4 @@ antiexpense/
 
 ---
 
-## 🧑‍💻 Author
 
-Built for Virtualan Software — Software Trainee Assessment  
-Submitted: September 2026
