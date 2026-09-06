@@ -44,20 +44,20 @@ async def lifespan(app: FastAPI):
         col = get_categories_collection()
         # Seed or ensure budget categories
         for cat in DEFAULT_BUDGET_CATEGORIES:
-            existing = await col.find_one({"name": {"$regex": f"^{cat['name']}$", "$options": "i"}})
+            existing = col.find_one({"name": {"$regex": f"^{cat['name']}$", "$options": "i"}})
             if not existing:
-                await col.insert_one({
+                col.insert_one({
                     **cat,
                     "created_at": datetime.now(timezone.utc),
                 })
             elif not existing.get("is_budget"):
-                await col.update_one({"_id": existing["_id"]}, {"$set": {"is_budget": True}})
+                col.update_one({"_id": existing["_id"]}, {"$set": {"is_budget": True}})
 
         # Seed default normal expense categories if none exist
         for cat in DEFAULT_EXPENSE_CATEGORIES:
-            existing = await col.find_one({"name": {"$regex": f"^{cat['name']}$", "$options": "i"}})
+            existing = col.find_one({"name": {"$regex": f"^{cat['name']}$", "$options": "i"}})
             if not existing:
-                await col.insert_one({
+                col.insert_one({
                     **cat,
                     "created_at": datetime.now(timezone.utc),
                 })

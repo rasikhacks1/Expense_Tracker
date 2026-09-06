@@ -10,7 +10,7 @@ from models.budget_model import BudgetCreate, BudgetUpdate
 from utils.helpers import normalize_doc, normalize_docs, parse_object_id
 
 
-async def create_budget(data: BudgetCreate) -> dict:
+def create_budget(data: BudgetCreate) -> dict:
     col = get_budgets_collection()
     cat_col = get_categories_collection()
 
@@ -22,7 +22,7 @@ async def create_budget(data: BudgetCreate) -> dict:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid category_id format.",
         )
-    cat = await cat_col.find_one({"_id": cat_oid})
+    cat = cat_col.find_one({"_id": cat_oid})
     if not cat:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -37,7 +37,7 @@ async def create_budget(data: BudgetCreate) -> dict:
         )
 
     # One budget per category per month
-    existing = await col.find_one(
+    existing = col.find_one(
         {"category_id": data.category_id, "month": data.month}
     )
     if existing:
@@ -52,22 +52,22 @@ async def create_budget(data: BudgetCreate) -> dict:
         "limit": data.limit,
         "created_at": datetime.now(timezone.utc),
     }
-    result = await col.insert_one(doc)
-    created = await col.find_one({"_id": result.inserted_id})
+    result = col.insert_one(doc)
+    created = col.find_one({"_id": result.inserted_id})
     return normalize_doc(created)
 
 
-async def get_all_budgets(month: Optional[str] = None) -> list[dict]:
+def get_all_budgets(month: Optional[str] = None) -> list[dict]:
     col = get_budgets_collection()
     query = {"month": month} if month else {}
-    docs = await col.find(query).sort("created_at", -1).to_list(length=None)
+    docs = list(col.find(query).sort("created_at", -1))
     return normalize_docs(docs)
 
 
-async def get_budget_by_id(budget_id: str) -> dict:
+def get_budget_by_id(budget_id: str) -> dict:
     col = get_budgets_collection()
     oid = parse_object_id(budget_id)
-    doc = await col.find_one({"_id": oid})
+    doc = col.find_one({"_id": oid})
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -76,7 +76,7 @@ async def get_budget_by_id(budget_id: str) -> dict:
     return normalize_doc(doc)
 
 
-async def update_budget(budget_id: str, data: BudgetUpdate) -> dict:
+def update_budget(budget_id: str, data: BudgetUpdate) -> dict:
     col = get_budgets_collection()
     oid = parse_object_id(budget_id)
 
@@ -87,27 +87,27 @@ async def update_budget(budget_id: str, data: BudgetUpdate) -> dict:
             detail="No fields to update.",
         )
 
-    result = await col.update_one({"_id": oid}, {"$set": update_data})
+    result = col.update_one({"_id": oid}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Budget '{budget_id}' not found.",
         )
 
-    updated = await col.find_one({"_id": oid})
+    updated = col.find_one({"_id": oid})
     return normalize_doc(updated)
 
 
-async def delete_budget(budget_id: str) -> dict:
+def delete_budget(budget_id: str) -> dict:
     col = get_budgets_collection()
     oid = parse_object_id(budget_id)
 
-    doc = await col.find_one({"_id": oid})
+    doc = col.find_one({"_id": oid})
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Budget '{budget_id}' not found.",
         )
 
-    await col.delete_one({"_id": oid})
+    col.delete_one({"_id": oid})
     return {"message": "Budget deleted successfully."}

@@ -1,7 +1,7 @@
 
 
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,14 +9,14 @@ load_dotenv()
 MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME: str = os.getenv("DB_NAME", "antiexpense")
 
-# Single Motor client instance (reused across requests)
-_client: AsyncIOMotorClient | None = None
+# Single PyMongo client instance (reused across requests)
+_client: MongoClient | None = None
 
 
-def get_client() -> AsyncIOMotorClient:
+def get_client() -> MongoClient:
     global _client
     if _client is None:
-        _client = AsyncIOMotorClient(MONGO_URI)
+        _client = MongoClient(MONGO_URI)
     return _client
 
 

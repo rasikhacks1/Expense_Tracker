@@ -10,7 +10,7 @@ from models.expense_model import ExpenseCreate, ExpenseUpdate
 from utils.helpers import normalize_doc, normalize_docs, parse_object_id
 
 
-async def create_expense(data: ExpenseCreate) -> dict:
+def create_expense(data: ExpenseCreate) -> dict:
     col = get_expenses_collection()
     cat_col = get_categories_collection()
     budget_col = get_budgets_collection()
@@ -23,7 +23,7 @@ async def create_expense(data: ExpenseCreate) -> dict:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid category_id format.",
         )
-    cat = await cat_col.find_one({"_id": cat_oid})
+    cat = cat_col.find_one({"_id": cat_oid})
     if not cat:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -43,7 +43,7 @@ async def create_expense(data: ExpenseCreate) -> dict:
         )
 
     # Enforce: a budget with amount > 0 must exist for that month before expenses can be added
-    existing_budget = await budget_col.find_one({"month": expense_month, "amount": {"$gt": 0}})
+    existing_budget = budget_col.find_one({"month": expense_month, "amount": {"$gt": 0}})
     if not existing_budget:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
@@ -59,12 +59,12 @@ async def create_expense(data: ExpenseCreate) -> dict:
         "note": data.note,
         "created_at": datetime.now(timezone.utc),
     }
-    result = await col.insert_one(doc)
-    created = await col.find_one({"_id": result.inserted_id})
+    result = col.insert_one(doc)
+    created = col.find_one({"_id": result.inserted_id})
     return normalize_doc(created)
 
 
-async def get_all_expenses(
+def get_all_expenses(
     category_id: Optional[str] = None,
     month: Optional[str] = None,
     skip: int = 0,
@@ -95,20 +95,19 @@ async def get_all_expenses(
                 detail="Invalid month format. Use YYYY-MM.",
             )
 
-    docs = (
-        await col.find(query)
+    docs = list(
+        col.find(query)
         .sort("date", -1)
         .skip(skip)
         .limit(limit)
-        .to_list(length=limit)
     )
     return normalize_docs(docs)
 
 
-async def get_expense_by_id(expense_id: str) -> dict:
+def get_expense_by_id(expense_id: str) -> dict:
     col = get_expenses_collection()
     oid = parse_object_id(expense_id)
-    doc = await col.find_one({"_id": oid})
+    doc = col.find_one({"_id": oid})
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -117,7 +116,7 @@ async def get_expense_by_id(expense_id: str) -> dict:
     return normalize_doc(doc)
 
 
-async def update_expense(expense_id: str, data: ExpenseUpdate) -> dict:
+def update_expense(expense_id: str, data: ExpenseUpdate) -> dict:
     col = get_expenses_collection()
     oid = parse_object_id(expense_id)
 
@@ -138,34 +137,34 @@ async def update_expense(expense_id: str, data: ExpenseUpdate) -> dict:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid category_id format.",
             )
-        cat = await cat_col.find_one({"_id": cat_oid})
+        cat = cat_col.find_one({"_id": cat_oid})
         if not cat:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Category '{update_data['category_id']}' not found.",
             )
 
-    result = await col.update_one({"_id": oid}, {"$set": update_data})
+    result = col.update_one({"_id": oid}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Expense '{expense_id}' not found.",
         )
 
-    updated = await col.find_one({"_id": oid})
+    updated = col.find_one({"_id": oid})
     return normalize_doc(updated)
 
 
-async def delete_expense(expense_id: str) -> dict:
+def delete_expense(expense_id: str) -> dict:
     col = get_expenses_collection()
     oid = parse_object_id(expense_id)
 
-    doc = await col.find_one({"_id": oid})
+    doc = col.find_one({"_id": oid})
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Expense '{expense_id}' not found.",
         )
 
-    await col.delete_one({"_id": oid})
+    col.delete_one({"_id": oid})
     return {"message": f"Expense '{doc['title']}' deleted successfully."}

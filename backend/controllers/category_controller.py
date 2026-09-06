@@ -9,11 +9,11 @@ from models.category_model import CategoryCreate, CategoryUpdate
 from utils.helpers import normalize_doc, normalize_docs, parse_object_id
 
 
-async def create_category(data: CategoryCreate) -> dict:
+def create_category(data: CategoryCreate) -> dict:
     col = get_categories_collection()
 
     # Check for duplicate name (case-insensitive)
-    existing = await col.find_one({"name": {"$regex": f"^{data.name}$", "$options": "i"}})
+    existing = col.find_one({"name": {"$regex": f"^{data.name}$", "$options": "i"}})
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -28,24 +28,24 @@ async def create_category(data: CategoryCreate) -> dict:
         "is_budget": is_budget,
         "created_at": datetime.now(timezone.utc),
     }
-    result = await col.insert_one(doc)
-    created = await col.find_one({"_id": result.inserted_id})
+    result = col.insert_one(doc)
+    created = col.find_one({"_id": result.inserted_id})
     return normalize_doc(created)
 
 
-async def get_all_categories() -> list[dict]:
+def get_all_categories() -> list[dict]:
     col = get_categories_collection()
-    docs = await col.find().sort("created_at", -1).to_list(length=None)
+    docs = list(col.find().sort("created_at", -1))
     for d in docs:
         if "is_budget" not in d:
             d["is_budget"] = d.get("name", "").strip().lower() in ["cash", "gpay", "card"]
     return normalize_docs(docs)
 
 
-async def get_category_by_id(category_id: str) -> dict:
+def get_category_by_id(category_id: str) -> dict:
     col = get_categories_collection()
     oid = parse_object_id(category_id)
-    doc = await col.find_one({"_id": oid})
+    doc = col.find_one({"_id": oid})
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -54,7 +54,7 @@ async def get_category_by_id(category_id: str) -> dict:
     return normalize_doc(doc)
 
 
-async def update_category(category_id: str, data: CategoryUpdate) -> dict:
+def update_category(category_id: str, data: CategoryUpdate) -> dict:
     col = get_categories_collection()
     oid = parse_object_id(category_id)
 
@@ -65,7 +65,7 @@ async def update_category(category_id: str, data: CategoryUpdate) -> dict:
             detail="No fields to update.",
         )
 
-    cat = await col.find_one({"_id": oid})
+    cat = col.find_one({"_id": oid})
     if not cat:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -80,17 +80,17 @@ async def update_category(category_id: str, data: CategoryUpdate) -> dict:
                 detail=f"Budget category '{cat['name']}' name cannot be changed.",
             )
 
-    result = await col.update_one({"_id": oid}, {"$set": update_data})
+    col.update_one({"_id": oid}, {"$set": update_data})
 
-    updated = await col.find_one({"_id": oid})
+    updated = col.find_one({"_id": oid})
     return normalize_doc(updated)
 
 
-async def delete_category(category_id: str) -> dict:
+def delete_category(category_id: str) -> dict:
     col = get_categories_collection()
     oid = parse_object_id(category_id)
 
-    doc = await col.find_one({"_id": oid})
+    doc = col.find_one({"_id": oid})
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -104,5 +104,5 @@ async def delete_category(category_id: str) -> dict:
             detail=f"Budget category '{doc['name']}' is reserved and cannot be deleted.",
         )
 
-    await col.delete_one({"_id": oid})
+    col.delete_one({"_id": oid})
     return {"message": f"Category '{doc['name']}' deleted successfully."}

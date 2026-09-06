@@ -12,13 +12,14 @@ Alert levels:
 from database.mongo import get_expenses_collection, get_budgets_collection, get_categories_collection
 from utils.helpers import normalize_docs
 from datetime import datetime
+from bson import ObjectId
 
 
 WARN_THRESHOLD = 0.80   # 80 %
 DANGER_THRESHOLD = 1.00  # 100 %
 
 
-async def compute_alerts(month: str | None = None) -> list[dict]:
+def compute_alerts(month: str | None = None) -> list[dict]:
     """
     For every budget document, sum expenses in that category/month
     and return an alert payload if spending exceeds WARN_THRESHOLD.
@@ -38,11 +39,9 @@ async def compute_alerts(month: str | None = None) -> list[dict]:
     expenses_col = get_expenses_collection()
     categories_col = get_categories_collection()
 
-    budgets = await budgets_col.find({"month": month}).to_list(length=None)
+    budgets = list(budgets_col.find({"month": month}))
 
     alerts = []
-
-    from bson import ObjectId
 
     for budget in budgets:
         cat_id = budget["category_id"]
@@ -50,7 +49,7 @@ async def compute_alerts(month: str | None = None) -> list[dict]:
 
         # Fetch category metadata
         try:
-            cat_doc = await categories_col.find_one({"_id": ObjectId(str(cat_id))})
+            cat_doc = categories_col.find_one({"_id": ObjectId(str(cat_id))})
         except Exception:
             cat_doc = None
 
@@ -84,7 +83,7 @@ async def compute_alerts(month: str | None = None) -> list[dict]:
             },
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
         ]
-        result = await expenses_col.aggregate(pipeline).to_list(length=1)
+        result = list(expenses_col.aggregate(pipeline))
         spent = result[0]["total"] if result else 0.0
 
         percentage = (spent / limit) * 100 if limit > 0 else 0
@@ -110,7 +109,7 @@ async def compute_alerts(month: str | None = None) -> list[dict]:
     return alerts
 
 
-async def get_summary(month: str | None = None) -> dict:
+def get_summary(month: str | None = None) -> dict:
     """
     Aggregated dashboard summary for a given month.
     Returns: total_budget, total_spent, remaining, category_breakdown, monthly_trend
@@ -123,12 +122,11 @@ async def get_summary(month: str | None = None) -> dict:
     categories_col = get_categories_collection()
 
     # ---- Total budget ----
-    budgets = await budgets_col.find({"month": month}).to_list(length=None)
-    from bson import ObjectId
+    budgets = list(budgets_col.find({"month": month}))
     valid_budgets = []
     for b in budgets:
         try:
-            cat_doc = await categories_col.find_one({"_id": ObjectId(str(b["category_id"]))})
+            cat_doc = categories_col.find_one({"_id": ObjectId(str(b["category_id"]))})
         except Exception:
             cat_doc = None
         if cat_doc and (cat_doc.get("name", "").strip().lower() in ["cash", "gpay", "card"] or cat_doc.get("is_budget", False)):
@@ -154,7 +152,7 @@ async def get_summary(month: str | None = None) -> dict:
         {"$match": date_match},
         {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
     ]
-    result = await expenses_col.aggregate(pipeline_total).to_list(length=1)
+    result = list(expenses_col.aggregate(pipeline_total))
     total_spent = result[0]["total"] if result else 0.0
 
     # ---- Per-category breakdown ----
@@ -162,15 +160,13 @@ async def get_summary(month: str | None = None) -> dict:
         {"$match": date_match},
         {"$group": {"_id": "$category_id", "spent": {"$sum": "$amount"}}},
     ]
-    cat_agg = await expenses_col.aggregate(pipeline_cat).to_list(length=None)
-
-    from bson import ObjectId
+    cat_agg = list(expenses_col.aggregate(pipeline_cat))
 
     category_breakdown = []
     for item in cat_agg:
         cat_id_str = item["_id"]
         try:
-            cat_doc = await categories_col.find_one({"_id": ObjectId(cat_id_str)})
+            cat_doc = categories_col.find_one({"_id": ObjectId(cat_id_str)})
         except Exception:
             cat_doc = None
         # Find budget limit for this category
@@ -209,7 +205,7 @@ async def get_summary(month: str | None = None) -> dict:
             {"$match": {"date": {"$gte": m_start, "$lt": m_end}}},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
         ]
-        res = await expenses_col.aggregate(pipeline_m).to_list(length=1)
+        res = list(expenses_col.aggregate(pipeline_m))
         monthly_trend.append(
             {"month": m_label, "spent": round(res[0]["total"] if res else 0.0, 2)}
         )

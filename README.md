@@ -17,7 +17,7 @@
 │  BUSINESS LOGIC LAYER  (FastAPI, port 8000)          │
 │  routes/ controllers/ services/ models/ utils/        │
 └──────────────────┬───────────────────────────────────┘
-                   │  Motor (async MongoDB driver)
+                   │  PyMongo (MongoDB driver)
 ┌──────────────────▼───────────────────────────────────┐
 │  DATA LAYER  (MongoDB, port 27017)                   │
 │  collections: categories, expenses, budgets           │
@@ -118,7 +118,7 @@ antiexpense/
 │   ├── requirements.txt
 │   ├── .env
 │   ├── database/
-│   │   └── mongo.py               # Motor async client (Data Layer)
+│   │   └── mongo.py               # PyMongo client (Data Layer)
 │   ├── models/                    # Pydantic schemas
 │   │   ├── category_model.py
 │   │   ├── expense_model.py
@@ -197,7 +197,7 @@ antiexpense/
 | Animations | Framer Motion |
 | Notifications | react-hot-toast |
 | Backend | FastAPI (Python 3.11) |
-| DB Driver | Motor (async) |
+| DB Driver | PyMongo |
 | Database | MongoDB 7.0 |
 | Container | Docker + Docker Compose |
 
