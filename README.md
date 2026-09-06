@@ -184,7 +184,7 @@ antiexpense/
 | Backend | FastAPI (Python 3.11) |
 | DB Driver | Motor (async) |
 | Database | MongoDB 7.0 |
-| Container | Docker + Docker Compose |
+
 
 ---
 
