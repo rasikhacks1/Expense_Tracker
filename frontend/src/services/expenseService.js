@@ -1,18 +1,30 @@
-/**
- * services/expenseService.js
- * Axios calls for the Expenses API.
- */
-
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const api = axios.create({ baseURL: `${BASE}/api/expenses` });
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-export const expenseService = {
-  getAll: (params = {}) => api.get('/', { params }).then(r => r.data),
-  getById: (id) => api.get(`/${id}`).then(r => r.data),
-  getSummary: (month) => api.get('/summary', { params: { month } }).then(r => r.data),
-  create: (data) => api.post('/', data).then(r => r.data),
-  update: (id, data) => api.put(`/${id}`, data).then(r => r.data),
-  delete: (id) => api.delete(`/${id}`).then(r => r.data),
-};
+
+const api = axios.create({
+  baseURL: `${BASE_URL}/api/expenses`,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+
+export const getExpenses = () =>
+  api.get('/').then((res) => res.data);
+
+
+export const getExpenseById = (id) =>
+  api.get(`/${id}`).then((res) => res.data);
+
+
+export const createExpense = (expense) =>
+  api.post('/', expense).then((res) => res.data);
+
+export const updateExpense = (id, expense) =>
+  api.put(`/${id}`, expense).then((res) => res.data);
+
+export const deleteExpense = (id) =>
+  api.delete(`/${id}`);
+
+export const checkBudget = (payload) =>
+  api.post('/check-budget', payload).then((res) => res.data);

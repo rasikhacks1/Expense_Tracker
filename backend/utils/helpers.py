@@ -1,15 +1,9 @@
-"""
-utils/helpers.py
-----------------
-Utility functions: ObjectId serialization, document normalization.
-"""
-
 from bson import ObjectId
 from typing import Any
 
 
 def object_id_to_str(doc: dict) -> dict:
-    """Convert MongoDB ObjectId fields to strings for JSON serialization."""
+    
     if doc is None:
         return doc
     result = {}
@@ -30,10 +24,6 @@ def object_id_to_str(doc: dict) -> dict:
 
 
 def normalize_doc(doc: dict) -> dict:
-    """
-    Rename '_id' to 'id' and serialize ObjectIds.
-    Called on every document returned from MongoDB before sending to client.
-    """
     if doc is None:
         return doc
     doc = object_id_to_str(doc)
@@ -47,7 +37,7 @@ def normalize_docs(docs: list[dict]) -> list[dict]:
 
 
 def parse_object_id(oid: str) -> ObjectId:
-    """Parse a string into a BSON ObjectId, raising ValueError on bad input."""
+    
     try:
         return ObjectId(oid)
     except Exception:

@@ -1,0 +1,53 @@
+
+
+.budget-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.budget-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.budget-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.budget-form .btn {
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.budget-form .btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.budget-form .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.budget-form .btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+}
+
+.budget-form .btn-secondary {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-secondary, #d1d5db);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

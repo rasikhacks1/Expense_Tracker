@@ -1,17 +1,24 @@
-/**
- * services/categoryService.js
- * Axios calls for the Categories API.
- */
-
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const api = axios.create({ baseURL: `${BASE}/api/categories` });
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-export const categoryService = {
-  getAll: () => api.get('/').then(r => r.data),
-  getById: (id) => api.get(`/${id}`).then(r => r.data),
-  create: (data) => api.post('/', data).then(r => r.data),
-  update: (id, data) => api.put(`/${id}`, data).then(r => r.data),
-  delete: (id) => api.delete(`/${id}`).then(r => r.data),
-};
+
+const api = axios.create({
+  baseURL: `${BASE_URL}/api/categories`,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+
+export const getCategories = (type) =>
+  api.get('/', { params: type ? { type } : {} }).then((res) => res.data);
+
+
+export const createCategory = (category) =>
+  api.post('/', category).then((res) => res.data);
+
+
+export const updateCategory = (id, category) =>
+  api.put(`/${id}`, category).then((res) => res.data);
+
+export const deleteCategory = (id) =>
+  api.delete(`/${id}`);

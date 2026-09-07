@@ -1,0 +1,88 @@
+.expense-list-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-lg, 12px);
+}
+
+.expense-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.expense-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #9ca3af);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.expense-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.expense-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.th-actions {
+  text-align: right;
+}
+
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.state-icon {
+  font-size: 2.5rem;
+}
+
+.state-text {
+  color: var(--text-secondary, #d1d5db);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.state-subtext {
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.state-error .state-text {
+  color: var(--danger, #f87171);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(124, 58, 237, 0.25);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+@media (max-width: 640px) {
+  .expense-table th:nth-child(4),
+  .expense-table td:nth-child(4) {
+    display: none;
+  }
+}

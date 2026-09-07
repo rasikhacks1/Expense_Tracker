@@ -1,257 +1,204 @@
-/**
- * pages/Dashboard.jsx
- * Main dashboard: stat cards, alert banners, charts, recent expenses.
- */
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useExpenses } from '../hooks/useExpenses';
+import { useBudgets } from '../hooks/useBudgets';
+import { useBudgetAlerts } from '../hooks/useBudgetAlerts';
+import { bannerNotice } from '../utils/budgetAlerts';
+import { formatCurrency, formatDate } from '../utils/formatters';
+import './Dashboard.css';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import StatCard from '../components/StatCard';
-import AlertBanner from '../components/AlertBanner';
-import DonutChart from '../components/DonutChart';
-import BarChart from '../components/BarChart';
-import { expenseService } from '../services/expenseService';
-import { budgetService } from '../services/budgetService';
-import { useAlerts } from '../context/AlertContext';
-import { formatCurrency, getCurrentMonth, formatMonth, formatDate, truncate } from '../utils/formatters';
-import { categoryService } from '../services/categoryService';
+
+const CATEGORY_ICONS = {
+  Food: '🍔', Transport: '🚗', Shopping: '🛍️', Bills: '⚡',
+  Entertainment: '🎬', Health: '🏥', Education: '📚', Travel: '✈️', Other: '💼',
+};
 
 export default function Dashboard() {
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
-  const [summary, setSummary] = useState(null);
-  const [recentExpenses, setRecentExpenses] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [monthAlerts, setMonthAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { expenses, loading, error } = useExpenses();
+  const { budgets, loading: budgetsLoading, error: budgetsError } = useBudgets();
+  const { alerts, loading: alertsLoading } = useBudgetAlerts();
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const [s, exp, cats, alts] = await Promise.all([
-          expenseService.getSummary(selectedMonth),
-          expenseService.getAll({ month: selectedMonth, limit: 5 }),
-          categoryService.getAll(),
-          budgetService.getAlerts(selectedMonth),
-        ]);
-        setSummary(s);
-        setRecentExpenses(exp);
-        setCategories(cats);
-        setMonthAlerts(alts);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [selectedMonth]);
+  const stats = useMemo(() => {
+    if (!expenses.length) return null;
 
-  const getCat = (catId) => categories.find(c => c.id === catId);
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const highest = expenses.reduce((max, e) => (e.amount > max.amount ? e : max), expenses[0]);
+    const recent = [...expenses]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          style={{ fontSize: '2.5rem' }}
-        >
-          💰
-        </motion.div>
-      </div>
-    );
-  }
-
-  const statCards = [
-    {
-      icon: '🎯',
-      label: 'Total Budget',
-      value: formatCurrency(summary?.total_budget ?? 0),
-      sub: `${formatMonth(selectedMonth)} budget`,
-      color: 'var(--primary-light)',
-    },
-    {
-      icon: '💸',
-      label: 'Total Spent',
-      value: formatCurrency(summary?.total_spent ?? 0),
-      sub: summary?.total_budget ? `${((summary.total_spent / summary.total_budget) * 100).toFixed(1)}% of budget` : `${formatMonth(selectedMonth)} spent`,
-      color: 'var(--danger)',
-    },
-    {
-      icon: '💚',
-      label: 'Remaining',
-      value: formatCurrency(summary?.remaining ?? 0),
-      sub: summary?.remaining < 0 ? '⚠️ Over budget!' : 'Available to spend',
-      color: (summary?.remaining ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
-    },
-    {
-      icon: '🔔',
-      label: 'Active Alerts',
-      value: `${monthAlerts.length}`,
-      sub: monthAlerts.length ? `${monthAlerts.length} in ${formatMonth(selectedMonth)}` : 'All within limits',
-      color: monthAlerts.length ? 'var(--warning)' : 'var(--success)',
-    },
-  ];
+    return { total, count: expenses.length, highest, recent };
+  }, [expenses]);
 
   return (
-    <div className="page-wrapper">
-      {/* Month Selector Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}>
+    <main className="dashboard-page page-wrapper">
+      <header className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Financial Overview
-          </h2>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Showing budget and expenses for <strong>{formatMonth(selectedMonth)}</strong>
-          </p>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Your expense summary at a glance</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>📅 Month:</span>
-          <input
-            type="month"
-            className="form-input"
-            style={{ width: 'auto' }}
-            value={selectedMonth}
-            onChange={e => setSelectedMonth(e.target.value)}
-            id="dashboard-month-filter"
-          />
-        </div>
-      </div>
+        <Link to="/expenses" className="btn-link" id="dashboard-view-all">
+          View All Expenses →
+        </Link>
+      </header>
 
-      {/* Stat Cards */}
-      <div className="grid-4" style={{ marginBottom: '28px' }}>
-        {statCards.map((card, i) => (
-          <StatCard key={card.label} {...card} index={i} />
-        ))}
-      </div>
-
-      {/* Alert Banner */}
-      {monthAlerts.length > 0 && <AlertBanner alerts={monthAlerts} />}
-
-      {/* Charts Row */}
-      <div className="grid-2" style={{ marginBottom: '28px', gap: '20px' }}>
-        <motion.div
-          className="glass-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          style={{ padding: '20px' }}
-        >
-          <div className="section-title">🍩 Spending by Category</div>
-          <DonutChart data={summary?.category_breakdown ?? []} />
-        </motion.div>
-
-        <motion.div
-          className="glass-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          style={{ padding: '20px' }}
-        >
-          <div className="section-title">📈 Monthly Trend</div>
-          <BarChart data={summary?.monthly_trend ?? []} />
-        </motion.div>
-      </div>
-
-      {/* Category Breakdown */}
-      {summary?.category_breakdown?.length > 0 && (
-        <motion.div
-          className="glass-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          style={{ padding: '20px', marginBottom: '28px' }}
-        >
-          <div className="section-title">🏷️ Category Breakdown</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {summary.category_breakdown.map(cat => {
-              const pct = cat.limit ? Math.min(100, (cat.spent / cat.limit) * 100) : null;
-              const barColor = pct === null ? 'var(--primary)' : pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
+      {/* Budget alert banner */}
+      {!alertsLoading && alerts.length > 0 && (
+        <div className="budget-alert-banner" id="budget-alert-banner">
+          <div className="budget-alert-banner-head">
+            <span className="budget-alert-icon">🚨</span>
+            <span className="budget-alert-title">
+              Budget {alerts.some((a) => a.status === 'over') ? 'Alerts' : 'Watch'}
+            </span>
+            <Link to="/budgets" className="budget-alert-link" id="budget-alert-manage">
+              Manage →
+            </Link>
+          </div>
+          <ul className="budget-alert-list">
+            {alerts.map((a) => {
+              const { text, tone } = bannerNotice(a);
               return (
-                <div key={cat.category_id}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
-                      {cat.category_icon} {cat.category_name}
-                    </span>
-                    <span style={{ fontSize: '0.82rem', color: barColor, fontWeight: 700 }}>
-                      {formatCurrency(cat.spent)}{cat.limit ? ` / ${formatCurrency(cat.limit)}` : ''}
-                    </span>
-                  </div>
-                  {pct !== null && (
-                    <div className="progress-bar-track">
-                      <div className="progress-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
-                    </div>
-                  )}
-                </div>
+                <li key={a.budget_id} className={`budget-alert-item ${tone}`}>
+                  <span className="budget-alert-dot" />
+                  {text}
+                </li>
               );
             })}
-          </div>
-        </motion.div>
+          </ul>
+        </div>
       )}
 
-      {/* Recent Expenses */}
-      <motion.div
-        className="glass-card"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55 }}
-        style={{ padding: '20px' }}
-      >
-        <div className="flex-between" style={{ marginBottom: '16px' }}>
-          <div className="section-title" style={{ marginBottom: 0 }}>🕐 Recent Expenses</div>
-          <a href="/expenses" style={{ fontSize: '0.8rem', color: 'var(--primary-light)', textDecoration: 'none' }}>
-            View all →
-          </a>
+      {/* Loading */}
+      {loading && (
+        <div className="dashboard-loading" id="dashboard-loading">
+          <div className="spinner" />
+          <p>Loading your expenses…</p>
         </div>
-        {recentExpenses.length === 0 ? (
-          <div className="empty-state" style={{ padding: '24px' }}>
-            <div className="empty-state-icon">💸</div>
-            <div className="empty-state-text">No expenses recorded for {formatMonth(selectedMonth)}</div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {recentExpenses.map(exp => {
-              const cat = getCat(exp.category_id);
-              return (
-                <div key={exp.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '10px 14px', borderRadius: 'var(--radius-md)',
-                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                  gap: '12px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                    <span style={{
-                      width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
-                      background: cat ? `${cat.color}20` : 'rgba(124,58,237,0.15)',
-                    }}>
-                      {cat?.icon ?? '💰'}
-                    </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
-                        {truncate(exp.title, 30)}
-                      </div>
-                      <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                        {formatDate(exp.date)} · {cat?.name ?? '—'} · {exp.payment_method || 'Cash'}
-                      </div>
-                    </div>
-                  </div>
-                  <span style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.92rem', flexShrink: 0 }}>
-                    {formatCurrency(exp.amount)}
-                  </span>
+      )}
+
+      {/* Error */}
+      {error && !loading && (
+        <div className="dashboard-error" id="dashboard-error">
+          <span>⚠️</span> {error}
+        </div>
+      )}
+
+      {/* Stats */}
+      {!loading && !error && (
+        <>
+          {stats ? (
+            <>
+              {/* Stat Cards */}
+              <section className="stats-grid" aria-label="Expense statistics">
+                <div className="stat-card" id="stat-total">
+                  <div className="stat-icon">💸</div>
+                  <div className="stat-value">{formatCurrency(stats.total)}</div>
+                  <div className="stat-label">Total Spent</div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </motion.div>
-    </div>
+
+                <div className="stat-card" id="stat-count">
+                  <div className="stat-icon">📋</div>
+                  <div className="stat-value">{stats.count}</div>
+                  <div className="stat-label">Total Expenses</div>
+                </div>
+
+                <div className="stat-card" id="stat-highest">
+                  <div className="stat-icon">🏆</div>
+                  <div className="stat-value">{formatCurrency(stats.highest.amount)}</div>
+                  <div className="stat-label">Highest Expense</div>
+                  <div className="stat-sub">{stats.highest.title}</div>
+                </div>
+
+                <div className="stat-card" id="stat-average">
+                  <div className="stat-icon">📊</div>
+                  <div className="stat-value">
+                    {formatCurrency(stats.total / stats.count)}
+                  </div>
+                  <div className="stat-label">Average Expense</div>
+                </div>
+              </section>
+
+              {/* Recent Expenses */}
+              <section className="recent-section">
+                <div className="section-header">
+                  <h2 className="section-title">🕐 Recent Expenses</h2>
+                  <Link to="/expenses" className="section-link" id="dashboard-view-all-bottom">
+                    View all →
+                  </Link>
+                </div>
+
+                <div className="recent-list">
+                  {stats.recent.map((expense) => (
+                    <div key={expense.id} className="recent-item">
+                      <div className="recent-item-left">
+                        <span className="recent-icon">
+                          {CATEGORY_ICONS[expense.category] || '💼'}
+                        </span>
+                        <div className="recent-info">
+                          <span className="recent-title">{expense.title}</span>
+                          <span className="recent-meta">
+                            {expense.category} · {formatDate(expense.date)}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="recent-amount">
+                        {formatCurrency(expense.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Budget Summary */}
+              {!budgetsLoading && !budgetsError && budgets.length > 0 && (
+                <section className="budget-section">
+                  <div className="section-header">
+                    <h2 className="section-title">🎯 Budgets</h2>
+                    <Link to="/budgets" className="section-link" id="dashboard-budgets-link">
+                      Manage →
+                    </Link>
+                  </div>
+
+                  <div className="budget-dash-list">
+                    {budgets.map((budget) => {
+                      const percent = budget.amount > 0
+                        ? Math.min(100, ((budget.spent || 0) / budget.amount) * 100)
+                        : 0;
+                      const over = (budget.spent || 0) > budget.amount;
+                      return (
+                        <div key={budget.id} className="budget-dash-row">
+                          <div className="budget-dash-head">
+                            <span className="budget-dash-category">{budget.category}</span>
+                            <span className={`budget-dash-amount ${over ? 'over' : ''}`}>
+                              {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.amount)}
+                            </span>
+                          </div>
+                          <div className="budget-dash-track">
+                            <div
+                              className={`budget-dash-fill ${over ? 'over' : ''}`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+            </>
+          ) : (
+            /* Empty State */
+            <div className="dashboard-empty" id="dashboard-empty">
+              <div className="empty-icon">📭</div>
+              <h2>No expenses yet</h2>
+              <p>Start tracking by adding your first expense.</p>
+              <Link to="/add-expense" className="btn-primary-link" id="dashboard-add-first">
+                ➕ Add Your First Expense
+              </Link>
+            </div>
+          )}
+        </>
+      )}
+    </main>
   );
 }

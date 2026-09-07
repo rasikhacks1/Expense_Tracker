@@ -1,0 +1,27 @@
+.category-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+}
+
+.category-form-input {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.category-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.field-error {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  color: var(--danger, #f87171);
+}

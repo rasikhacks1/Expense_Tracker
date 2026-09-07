@@ -1,16 +1,29 @@
-
-
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const api = axios.create({ baseURL: `${BASE}/api/budgets` });
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-export const budgetService = {
-  getAll: (month) => api.get('/', { params: month ? { month } : {} }).then(r => r.data),
-  getById: (id) => api.get(`/${id}`).then(r => r.data),
-  getAlerts: (month) => api.get('/alerts', { params: month ? { month } : {} }).then(r => r.data),
-  checkMonth: (month) => api.get('/check', { params: month ? { month } : {} }).then(r => r.data),
-  create: (data) => api.post('/', data).then(r => r.data),
-  update: (id, data) => api.put(`/${id}`, data).then(r => r.data),
-  delete: (id) => api.delete(`/${id}`).then(r => r.data),
-};
+
+const api = axios.create({
+  baseURL: `${BASE_URL}/api/budgets`,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+
+export const getBudgets = () =>
+  api.get('/').then((res) => res.data);
+
+
+export const createBudget = (budget) =>
+  api.post('/', budget).then((res) => res.data);
+
+
+export const updateBudget = (id, budget) =>
+  api.put(`/${id}`, budget).then((res) => res.data);
+
+
+export const deleteBudget = (id) =>
+  api.delete(`/${id}`);
+
+
+export const getBudgetAlerts = (warn = true) =>
+  api.get('/alerts', { params: { warn } }).then((res) => res.data);

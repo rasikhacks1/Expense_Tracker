@@ -1,0 +1,62 @@
+
+
+.add-expense-page {
+  max-width: 600px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary, #f0f0ff);
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted, #9ca3af);
+  margin: 0.25rem 0 0;
+}
+
+.back-link {
+  color: #a78bfa;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  padding-top: 0.25rem;
+  transition: color 0.15s;
+}
+.back-link:hover { color: #c4b5fd; }
+
+.add-expense-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+.success-banner {
+  padding: 0.85rem 1rem;
+  background: rgba(6, 214, 160, 0.1);
+  border: 1px solid rgba(6, 214, 160, 0.3);
+  border-radius: 8px;
+  color: #6ee7b7;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .page-wrapper { padding: 1rem; }
+  .add-expense-card { padding: 1.25rem; }
+}

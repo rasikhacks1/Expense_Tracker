@@ -1,32 +1,37 @@
-/**
- * hooks/useExpenses.js
- * Custom hook for fetching and managing expense list state.
- */
-
 import { useState, useEffect, useCallback } from 'react';
-import { expenseService } from '../services/expenseService';
+import { getExpenses } from '../services/expenseService';
 
-export function useExpenses(filters = {}) {
+
+export function useExpenses() {
   const [expenses, setExpenses] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await expenseService.getAll(filters);
+      const data = await getExpenses();
       setExpenses(data);
     } catch (err) {
-      setError(err?.response?.data?.detail || 'Failed to load expenses');
+      console.error('Failed to fetch expenses:', err);
+      setError(
+        err?.response?.data?.detail ||
+          'Failed to load expenses. Please check that the backend is running.'
+      );
     } finally {
       setLoading(false);
     }
-  }, [JSON.stringify(filters)]);
+  }, []);
 
   useEffect(() => {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  return { expenses, loading, error, refetch: fetchExpenses };
+  return {
+    expenses,
+    loading,
+    error,
+    refetch: fetchExpenses,
+  };
 }
