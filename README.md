@@ -473,8 +473,8 @@ npm run dev
 
 > The Vite dev server proxies `/api/*` requests to `http://localhost:8000`, and CORS is configured for the dev origin as well.
 
----
 
+<<<<<<< HEAD
 ## 17. Swagger Documentation
 
 FastAPI generates interactive API documentation automatically.
@@ -485,6 +485,8 @@ FastAPI generates interactive API documentation automatically.
 Each endpoint includes a summary, description, response status codes, and an example request body — useful for trying the API without a frontend.
 
 ---
+=======
+>>>>>>> 074a4ab734f1cc94b0f8a2f90753c18a4dc1c96e
 
 ## 18. CRUD Explanation
 
@@ -572,6 +574,7 @@ HTTPException details are returned as `{"detail": "message"}`. Internal Python/M
 
 ## 📖 Useful Commands
 
+<<<<<<< HEAD
 | Action                       | Command                                   |
 |------------------------------|-------------------------------------------|
 | Start backend                | `cd backend && venv\Scripts\activate && uvicorn main:app --reload` |
@@ -579,3 +582,21 @@ HTTPException details are returned as `{"detail": "message"}`. Internal Python/M
 | Lint frontend                | `cd frontend && npm run lint`             |
 | Build frontend (production)  | `cd frontend && npm run build`            |
 | Swagger docs                 | http://localhost:8000/docs                |
+=======
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite, React Router v6 |
+| State | React Context API, Custom hooks |
+| HTTP | Axios |
+| Charts | Recharts |
+| Animations | Framer Motion |
+| Notifications | react-hot-toast |
+| Backend | FastAPI (Python 3.11) |
+| DB Driver | Motor (async) |
+| Database | MongoDB 7.0 |
+
+
+---
+
+
+>>>>>>> 074a4ab734f1cc94b0f8a2f90753c18a4dc1c96e
