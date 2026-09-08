@@ -1,7 +1,5 @@
 from bson import ObjectId
 
-
-
 def object_id_to_str(doc: dict) -> dict:
     
     if doc is None:
