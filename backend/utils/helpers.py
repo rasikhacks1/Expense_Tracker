@@ -1,5 +1,5 @@
 from bson import ObjectId
-from typing import Any
+
 
 
 def object_id_to_str(doc: dict) -> dict:
